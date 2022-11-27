@@ -21,6 +21,8 @@
   "devDependencies": {
     "autoprefixer": "^10.4.13",
     "css-loader": "^6.7.2",
+    "eslint": "^8.28.0",
+    "eslint-config-airbnb": "^19.0.4",
     "html-webpack-plugin": "^5.5.0",
     "postcss-loader": "^7.0.1",
     "sass": "^1.56.1",
@@ -32,6 +34,8 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.6",
-    "bootstrap": "^5.2.3"
+    "bootstrap": "^5.2.3",
+    "on-change": "^4.0.2",
+    "yup": "^0.32.11"
   }
 }
