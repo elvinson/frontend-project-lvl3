@@ -5,37 +5,98 @@ import { string } from 'yup';
 export default () => {
   const state = {
     form: {
-      state: 'valid',
-      errors: [],
+      state: 'filling', // sending
+      validation: {
+        state: true,
+        message: ""
+      }
     },
+    feedList: []
   };
 
-  const watchedState = onChange(state, (path, value, previousValue) => {
-    if (path === 'form.state' && value === 'invalid') {
+  const form = document.querySelector('form');
+  const formUrlInput = form.querySelector('input[name="url"]');
+  const formSendButton = form.querySelector('button');
+  const formValidationFeedback = document.querySelector('.feedback');
 
+  // Можем ли мы менять состояние в рендере?ы
+  const watchedState = onChange(state, (path, value) => {
+    if (path === 'form.state' && value === 'filling') {
+      form.reset();
+      formUrlInput.disabled = false;
+      formUrlInput.focus();
+      formSendButton.disabled = false;
+    }
+
+    if (path === 'form.state' && value === 'sending') {
+      formUrlInput.disabled = true;
+      formSendButton.disabled = true;
+    }
+
+    if (path === 'form.validation') {
+      if (watchedState.form.validation.state) {
+        formUrlInput.classList.remove('is-invalid');
+        formValidationFeedback.textContent = "";
+      } else {
+        formUrlInput.classList.add('is-invalid');
+        formValidationFeedback.textContent = watchedState.form.validation.message;
+      }
     }
   });
 
-  const form = document.querySelector('form');
-  const schema = string().required('пустое поле').trim().url('некорректный url');
+  // RSS успешно загружен
+  // RSS уже существует
+  // Ссылка должна быть валидным URL
+  // Ресурс не содержит валидный RSS
+  const schema = string().required('').trim().url('Ссылка должна быть валидным URL');
+
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const formData = new FormData(event.target);
     const url = formData.get('url');
 
-    const processValidationSuccess = (data) => {
-      watchedState.form.state = 'valid';
-      watchedState.form.errors = [];
+    const processValidationSuccess = () => {
+      watchedState.form.validation = {
+        state: true, 
+        message: ""
+      };
+
+      watchedState.feedList.push({
+        url: url,
+        content: []
+      });
+
+      watchedState.form.state = 'sending';
+
+      setTimeout(() => {
+        watchedState.form.state = 'filling';
+      }, 3000);
     };
 
     const processValidationError = (error) => {
-      watchedState.form.state = 'invalid';
-      watchedState.form.errors.push(error);
+      watchedState.form.validation = {
+        state: false, 
+        message: error.message
+      };
     };
 
     schema.validate(url)
+      .then(() => {
+        const feedItem = watchedState.feedList.find((feedItem) => feedItem.url === url);
+
+        if (feedItem) {
+          throw new Error("RSS уже существует");
+        }
+      })
       .then(processValidationSuccess)
       .catch(processValidationError);
   });
 };
+
+
+
+// После отправки данных формы, приложение должно производить валидацию и подсвечивать красным рамку вокруг инпута, если адрес невалидный. 
+// Помимо корректности ссылки, нужно валидировать дубли. 
+// Если урл уже есть в списке фидов, то он не проходит валидацию. 
+// После того как поток добавлен, форма принимает первоначальный вид (очищается инпут, устанавливается фокус).
