@@ -2,7 +2,7 @@
 import onChange from 'on-change';
 import { string } from 'yup';
 
-export default () => {
+export default (i18next) => {
   const state = {
     form: {
       state: 'filling', // sending
@@ -44,12 +44,7 @@ export default () => {
     }
   });
 
-  // RSS успешно загружен
-  // RSS уже существует
-  // Ссылка должна быть валидным URL
-  // Ресурс не содержит валидный RSS
-  const schema = string().required('').trim().url('Ссылка должна быть валидным URL');
-
+  const schema = string().required('').trim().url(i18next.t('messages.error.urlIsInvalid'));
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -86,7 +81,7 @@ export default () => {
         const feedItem = watchedState.feedList.find((feedItem) => feedItem.url === url);
 
         if (feedItem) {
-          throw new Error("RSS уже существует");
+          throw new Error(i18next.t('messages.error.rssAlreadyExists'));
         }
       })
       .then(processValidationSuccess)
